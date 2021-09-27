@@ -8,13 +8,13 @@ qgisMinimumVersion=2.99
 qgisMaximumVersion=3.99
 description=Parse street addresses using deep learning.
 version=0.1
-author=TA
-email=exampke@email.com
+author=Tyler Amos
+email=tyler [dawt] amos [at] alumni [dawt] carleton [dawt] ca
 
 about=Parse street addresses with a deep learning model. The deep learning model is taken from deepparse.org. This plugin is experimental.
 
-tracker=http://bugs
-repository=http://repo
+tracker=https://github.com/tamos/qgis-street-address-parser/issues
+repository=https://github.com/tamos/qgis-street-address-parser
 # End of mandatory metadata
 
 # Recommended items:
@@ -26,7 +26,7 @@ hasProcessingProvider=no
 # Tags are comma separated with spaces allowed
 tags=python
 
-homepage=http://homepage
+homepage=https://github.com/tamos/qgis-street-address-parser
 category=Plugins
 icon=icon.png
 # experimental flag
