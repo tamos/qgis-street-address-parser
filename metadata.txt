@@ -9,7 +9,7 @@ qgisMaximumVersion=3.99
 description=Parse street addresses using deep learning.
 version=0.1
 author=Tyler Amos
-email=tyler [dawt] amos [at] alumni [dawt] carleton [dawt] ca
+email=tyler.amos@alumni.carleton.ca
 
 about=Parse street addresses with a deep learning model. The deep learning model is taken from deepparse.org. This plugin is experimental.
 
