@@ -37,6 +37,9 @@ import os
 import sys
 
 
+# To do: document, handle errors better, add ability to output to file 
+
+
 # qgis is still struggling with how to install external dependencies
 # https://github.com/qgis/QGIS-Enhancement-Proposals/issues/202
 # potential solution is to run this as a (heroku) web app service
@@ -51,8 +54,6 @@ except ImportError:
     for i in wheels_available:
         path = os.path.join(wheels_dir, i)
         sys.path.append(path)
-    for i in sys.path:
-        QgsMessageLog.logMessage(i)
     import requests
 
 
@@ -283,10 +284,8 @@ class StreetAddressParser:
             each_feat_attrs = each_feature.attributes() # get old feature attrs
 
             #       Parse Addresses
-            # placeholder code until parser works
-            # parse address field with deepparse model
-            #parse_rv = self.parser(each_feat_attrs[field_idx])#.to_dict()
-            #parsed_results = [parse_rv[i] for i in self.parse_res_fields]
+            # to do: check if api is working before request
+            # to do: multiple addresses in one request
             parse_rv = requests.get(self.api_url,
                 data = dict(address=each_feat_attrs[field_idx]))
             # default return value in case we failed
