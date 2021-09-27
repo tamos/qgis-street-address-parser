@@ -33,6 +33,28 @@ import os.path
 from qgis.PyQt.QtCore import QVariant
 from qgis.core import (QgsProject, QgsMessageLog, QgsVectorLayer, QgsField,
                         QgsFeature, QgsGeometry, QgsPointXY, QgsWkbTypes)
+import os
+import sys
+
+
+# qgis is still struggling with how to install external dependencies
+# https://github.com/qgis/QGIS-Enhancement-Proposals/issues/202
+# potential solution is to run this as a (heroku) web app service
+# that just spins up the model and responds to the queries?
+# append paths of dependencies in wheel files
+try:
+    import requests
+except ImportError:
+    this_dir = os.path.dirname(os.path.realpath(__file__))
+    wheels_dir = os.path.join(this_dir, 'wheels')
+    wheels_available = os.listdir(wheels_dir)
+    for i in wheels_available:
+        path = os.path.join(wheels_dir, i)
+        sys.path.append(path)
+    for i in sys.path:
+        QgsMessageLog.logMessage(i)
+    import requests
+
 
 class StreetAddressParser:
     """QGIS Plugin Implementation."""
@@ -74,6 +96,7 @@ class StreetAddressParser:
         self._lyr_list = None
         self.parse_res_fields = ['StreetNumber', 'StreetName', 'Unit', 'Municipality',
                                 'Province', 'PostalCode', 'Orientation', 'GeneralDelivery']
+        self.api_url = 'http://localhost:5000/parse'
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -213,15 +236,19 @@ class StreetAddressParser:
             if target_field.typeName() != 'String':
                 raise TypeError("Target field is not string!")
             # here is where we do the parsing
-            self.setup_parser()
             self.make_new_layer()
 
-    def setup_parser(self):
-        self.parser = lambda x: x
+
+    #def setup_parser(self):
+        # load and install deepparse
+        # fetch model or use one on disk
+        #self.parser = AddressParser(model_type = 'fasttext-light') # if download
+        # or maybe something like this if instead we put the model in with the source
+        #self.parser = AddressParser(path_to_retrained_model = os.path.join(plugins_dir, 'street_address_parser', 'models', 'model_name'))
+        #self.parser = lambda x: x
 
 
     def make_new_layer(self):
-
         #           Set Up
         # https://docs.qgis.org/3.16/en/docs/pyqgis_developer_cookbook/vector.html#from-an-instance-of-qgsvectorlayer
         lyr_select = self.get_lyr_select_layer()
@@ -245,7 +272,7 @@ class StreetAddressParser:
         parsed_fields =  [QgsField(j) for j in fields]
         for i in self.parse_res_fields:
             # now add the fields we for parsed results as their names, string
-            parsed_fields.append(QgsField(i, QVariant.String))
+            parsed_fields.append(QgsField(i, QVariant.String, len = 100))
         pr.addAttributes(parsed_fields)
         vl.updateFields() # tell the vector layer to fetch changes from the provider
 
@@ -257,11 +284,21 @@ class StreetAddressParser:
 
             #       Parse Addresses
             # placeholder code until parser works
-            # parse address field with deepparse model 
-            parse_rv = self.parser(each_feat_attrs[field_idx])#.to_dict()
+            # parse address field with deepparse model
+            #parse_rv = self.parser(each_feat_attrs[field_idx])#.to_dict()
             #parsed_results = [parse_rv[i] for i in self.parse_res_fields]
-            # unpack results
-            parsed_results = [parse_rv] * len(self.parse_res_fields)
+            parse_rv = requests.get(self.api_url,
+                data = dict(address=each_feat_attrs[field_idx]))
+            # default return value in case we failed
+            parsed_results = [None] * len(self.parse_res_fields)
+            if parse_rv.ok:
+                parse_rv = parse_rv.json()
+                if parse_rv['status'] == 'Success':
+                    # unpack results
+                    addr = parse_rv['parsed']['parsed_address']
+                    parsed_results = []
+                    for i in self.parse_res_fields:
+                        parsed_results.append(self.clean_component(addr[i]))
             # set attributes of feature as old + parsed fields
             fet.setAttributes(each_feat_attrs + parsed_results)
             pr.addFeatures([fet]) # push feature to the layer
@@ -275,6 +312,12 @@ class StreetAddressParser:
         # set the crs to be the same as the layer we copied from
         vl.setCrs(lyr_select.crs())
         self.project.addMapLayer(vl) # add the new layer to the map
+
+    def clean_component(self, s):
+        if s is not None and isinstance(s, str):
+            return s.strip().strip(",").strip(".")
+        else:
+            return s
 
 
     def update_fields(self):
