@@ -37,7 +37,7 @@ import os
 import sys
 
 
-# To do: document, handle errors better, add ability to output to file 
+# To do: document, handle errors better, add ability to output to file
 
 
 # qgis is still struggling with how to install external dependencies
@@ -97,7 +97,9 @@ class StreetAddressParser:
         self._lyr_list = None
         self.parse_res_fields = ['StreetNumber', 'StreetName', 'Unit', 'Municipality',
                                 'Province', 'PostalCode', 'Orientation', 'GeneralDelivery']
-        self.api_url = 'http://localhost:5000/parse'
+        # model is too big for heroku free service
+        #self.api_url = 'https://qgis-street-address-parser.herokuapp.com/parse'
+        self.api_url = 'http://127.0.0.1:5000/parse'
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -229,6 +231,7 @@ class StreetAddressParser:
         self.dlg.lyr_select.addItems([i.name() for i in self.layer_list])
         self.dlg.lyr_select.currentIndexChanged.connect(self.update_fields)
         self.update_fields() # just make sure we have this loaded for open
+        self.dlg.server_location.setPlainText(self.api_url)
 
         # execute, which happens after ok
         result = self.dlg.exec_()
@@ -252,6 +255,7 @@ class StreetAddressParser:
     def make_new_layer(self):
         #           Set Up
         # https://docs.qgis.org/3.16/en/docs/pyqgis_developer_cookbook/vector.html#from-an-instance-of-qgsvectorlayer
+        self.api_url = self.dlg.server_location.toPlainText()
         lyr_select = self.get_lyr_select_layer()
         field_select = self.get_field_select_field()
         field_idx = self.get_selected_field_idx()
