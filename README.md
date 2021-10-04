@@ -1,7 +1,9 @@
 # qgis-street-address-parser
 
 
-A QGIS plugin to parse street addresses into their component parts using a deep learning model from deepparse.org. **Work in progress.**
+A QGIS plugin to parse street addresses into their component parts using a deep learning model from deepparse.org.
+
+ **Work in progress.**
 
 Source code for the REST API is available [here.](https://github.com/tamos/qgis-street-address-parser-api)
 

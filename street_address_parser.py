@@ -35,6 +35,7 @@ from qgis.core import (QgsProject, QgsMessageLog, QgsVectorLayer, QgsField,
                         QgsFeature, QgsGeometry, QgsPointXY, QgsWkbTypes)
 import os
 import sys
+import subprocess
 
 
 # To do: document, handle errors better, add ability to output to file
@@ -55,6 +56,7 @@ except ImportError:
         path = os.path.join(wheels_dir, i)
         sys.path.append(path)
     import requests
+    import pipx
 
 
 class StreetAddressParser:
@@ -240,7 +242,10 @@ class StreetAddressParser:
             if target_field.typeName() != 'String':
                 raise TypeError("Target field is not string!")
             # here is where we do the parsing
-            self.make_new_layer()
+            try:
+                self.make_new_layer()
+            except Exception as e:
+                QgsMessageLog.logMessage(print(e))
 
 
     #def setup_parser(self):
